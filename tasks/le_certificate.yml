@@ -1,0 +1,58 @@
+---
+  - name: Install software-properties-common (Debian/Ubuntu)
+    apt:
+      name: software-properties-common
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+    when: ansible_os_family == "Debian"
+
+  - name: Install Certbot (Debian/Ubuntu)
+    apt:
+      name: certbot
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Install Apache plugin for Certbot (Debian/Ubuntu)
+    apt:
+      name: python3-certbot-apache
+      state: present
+    when: ansible_os_family == "Debian" and webserver_type == "apache2"
+
+  - name: Install Nginx plugin for Certbot (Debian/Ubuntu)
+    apt:
+      name: python3-certbot-nginx
+      state: present
+    when: ansible_os_family == "Debian" and webserver_type == "nginx"
+
+  - name: Install EPEL repo (RedHat-based)
+    yum:
+      name: epel-release
+      state: present
+    when: ansible_os_family == "RedHat"
+
+  - name: Install Certbot (RedHat-based)
+    yum:
+      name: certbot
+      state: present
+    when: ansible_os_family == "RedHat"
+
+  - name: Stop web server to free up port 80
+    service:
+      name: "{{ webserver_type }}"
+      state: stopped
+    ignore_errors: yes
+
+  - name: Obtain a Let's Encrypt certificate with standalone plugin
+    shell: |
+      certbot certonly --non-interactive --agree-tos --email {{ e_mail }} --standalone -d "{{ site_name }}"
+    args:
+      creates: "/etc/letsencrypt/live/{{ site_name }}/fullchain.pem"
+
+  - name: Start web server after certificate issuance
+    service:
+      name: "{{ webserver_type }}"
+      state: started

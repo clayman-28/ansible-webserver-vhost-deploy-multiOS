@@ -1,0 +1,4 @@
+---
+# ssl certificate path
+cert_path: "/etc/letsencrypt/live/{{ site_name }}/fullchain.pem"
+cert_key_path: "/etc/letsencrypt/live/{{ site_name }}/privkey.pem"

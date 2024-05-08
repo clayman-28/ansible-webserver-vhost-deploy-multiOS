@@ -1,0 +1,20 @@
+---
+# nginx and apache2 is accepted
+webserver_type: "{{ webserver }}"
+
+# declare your site's name
+site_name: "{{ site_name }}"
+
+# declare what port does the service using what needs to be proxied
+service_port: "{{ service_port }}"
+
+# declare server ip what the service is running on
+protocol: "{{ protocol }}"
+server_ip: "{{ server_ip }}"
+
+# ssl certificate path
+cert_path: "{{ cert_path }}"
+cert_key_path: "{{ cert_key_path }}"
+
+# e-mail for certbot
+e_mail: "{{ e_mail }}"

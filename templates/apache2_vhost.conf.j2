@@ -1,0 +1,30 @@
+<VirtualHost *:443>
+  ServerName {{ site_name }}
+  ProxyPreserveHost On
+  ErrorLog /var/log/apache2/{{ site_name }}_error.log
+  TransferLog /var/log/apache2/{{ site_name }}_access.log
+  # LogLevel debug
+  
+  SSLEngine On
+  SSLOptions +StrictRequire
+  SSLCertificateKeyFile {{ cert_key_path }}
+  SSLCertificateFile {{ cert_path }}
+
+  RewriteEngine on
+  RewriteCond %{HTTP:UPGRADE} ^WebSocket$ [NC]
+  RewriteCond %{HTTP:CONNECTION} ^Upgrade$ [NC]
+  RewriteRule .* ws://{{ server_ip }}:{{ service_port }}%{REQUEST_URI} [P]
+
+  <Location />
+    Order allow,deny
+    Allow from all
+    ProxyPass {{ protocol }}://{{ server_ip }}:{{ service_port }}/
+    ProxyPassReverse {{ protocol }}://{{ server_ip }}:{{ service_port }}/
+  </Location>
+
+</VirtualHost>
+
+<VirtualHost *:80>
+ServerName {{ site_name }}
+Redirect permanent / https://{{ site_name }}
+</VirtualHost>

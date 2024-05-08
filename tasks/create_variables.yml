@@ -1,0 +1,79 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_prompt:
+    - name: webserver
+      prompt: "Enter the web server type (e.g., nginx, apache2)"
+      private: no
+
+    - name: site_name
+      prompt: "Enter the site name (e.g., example.example.com)"
+      private: no
+
+    - name: service_port
+      prompt: "Enter the service's/container's port"
+      private: no
+
+    - name: protocol
+      prompt: "Enter the protocol (e.g., http, https)"
+      private: no
+
+    - name: server_ip
+      prompt: "Enter the server IP address (e.g., localhost)"
+      private: no
+
+    - name: e_mail
+      prompt: "Enter your e-mail for letsencrypt certificate"
+      private: no
+
+    - name: user_response_existing_cert
+      prompt: "Do you have an existing certificate? [yes/no]"
+      private: no
+    
+  tasks:
+    - name: Prompt for certificate path
+      pause:
+        prompt: "Enter the absolute path to your certificate"
+      register: cert_path_input
+      when: user_response_existing_cert == "yes"
+
+    - name: Set cert_path variable
+      set_fact:
+        cert_path: "{{ cert_path_input.user_input }}"
+      when: user_response_existing_cert == "yes"
+
+    - name: Prompt for certificate key path
+      pause:
+        prompt: "Enter the absolute path to your key file"
+      register: cert_key_path_input
+      when: user_response_existing_cert == "yes"
+
+    - name: Set cert_key_path variable
+      set_fact:
+        cert_key_path: "{{ cert_key_path_input.user_input }}"
+      when: user_response_existing_cert == "yes"
+
+    - name: Create vars directory
+      file:
+        path: "../vars"
+        state: directory
+
+    - name: Include le_cert.yml variables
+      include_vars:
+        file: "../vars/le_cert.yml"
+      when: user_response_existing_cert == "no"
+
+    - name: Set cert_path variable from le_cert.yml
+      set_fact:
+        cert_path: "{{ le_cert_cert_path }}"
+      when: user_response_existing_cert == "no" and le_cert_cert_path is defined
+
+    - name: Set cert_key_path variable from le_cert.yml
+      set_fact:
+        cert_key_path: "{{ le_cert_cert_key_path }}"
+      when: user_response_existing_cert == "no" and le_cert_cert_key_path is defined
+   
+    - name: Generate vars.yml file from template
+      template:
+        src: "../templates/vars.yml.j2"
+        dest: "../vars/vars.yml"

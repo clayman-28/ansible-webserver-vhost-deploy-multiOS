@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  become: yes
+
+  vars_prompt:
+    - name: user_response_cert_create
+      prompt: "Would you like to create a certificate for your site with Let's Encrypt (highly recommended if you don't have your own certificate)? (yes/no)"
+      private: no
+    
+  tasks:
+    - include_tasks: tasks/install_webserver.yml
+    - include_tasks: tasks/le_certificate.yml
+      when: user_response_cert_create == "yes"
+    - include_tasks: tasks/deploy_vhost.yml
+  
+  vars_files:
+    - vars/vars.yml
+
+  handlers:
+      - import_tasks: handlers/main.yml

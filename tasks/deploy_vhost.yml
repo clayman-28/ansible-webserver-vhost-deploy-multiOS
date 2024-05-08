@@ -1,0 +1,36 @@
+---
+- name: Conditionally include a specific vars file
+  include_vars:
+    file: ../vars/le_cert.yml
+  when: user_response_cert_create == "yes"
+
+- name: Deploy Nginx virtual host configuration
+  template:
+    src: templates/nginx_vhost.conf.j2
+    dest: /etc/nginx/sites-available/{{ site_name }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - 'reload nginx'
+  when: webserver_type == 'nginx'
+
+- name: Enable site for Nginx
+  file:
+    src: /etc/nginx/sites-available/{{ site_name }}.conf
+    dest: /etc/nginx/sites-enabled/{{ site_name }}.conf
+    state: link
+  when: webserver_type == 'nginx'
+
+- name: Deploy Apache2 virtual host configuration
+  template:
+    src: templates/apache2_vhost.conf.j2
+    dest: /etc/apache2/sites-available/{{ site_name }}.conf
+  notify: 'reload apache2'
+  when: webserver_type == 'apache2'
+
+- name: Enable Apache2 site
+  command:
+    cmd: a2ensite {{ site_name }}.conf
+  notify: 'reload apache2'
+  when: webserver_type == 'apache2'

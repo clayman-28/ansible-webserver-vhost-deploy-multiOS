@@ -1,0 +1,42 @@
+---
+- name: Set package manager based on distribution
+  set_fact:
+    pkg_mgr: apt
+  when: ansible_os_family == "Debian"
+
+- name: Set package manager based on distribution
+  set_fact:
+    pkg_mgr: yum
+  when: ansible_os_family == "RedHat"
+
+- name: Check if nginx is installed
+  command: which nginx
+  register: nginx_installed
+  failed_when: false
+  changed_when: false
+  when: webserver_type == "nginx"
+
+- name: Install nginx
+  package:
+    name: nginx
+    state: present
+  when: webserver_type == "nginx" and nginx_installed.rc != 0
+
+- name: Check if apache2 is installed
+  command: which apache2
+  register: apache2_installed
+  failed_when: false
+  changed_when: false
+  when: webserver_type == "apache2"
+
+- name: Install apache2 (for Debian/Ubuntu)
+  package:
+    name: apache2
+    state: present
+  when: webserver_type == "apache2" and apache2_installed.rc != 0 and pkg_mgr == "apt"
+
+- name: Install httpd (for RedHat/CentOS)
+  package:
+    name: httpd
+    state: present
+  when: webserver_type == "apache2" and apache2_installed.rc != 0 and pkg_mgr == "yum"
